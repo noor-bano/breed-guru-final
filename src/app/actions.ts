@@ -2,30 +2,34 @@
 
 import { generateBreedDescription } from "@/ai/flows/breed-description-generation";
 import { translateBreedDescription } from "@/ai/flows/translate-breed-description";
+import { classifyBreed } from "@/ai/flows/classify-breed-flow";
 import { z } from "zod";
 
-const MOCK_BREEDS = [
-  { breed: 'Gir', confidence: 0.87 },
-  { breed: 'Sahiwal', confidence: 0.11 },
-  { breed: 'Red Sindhi', confidence: 0.02 }
-];
+async function fileToDataURI(file: File) {
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const base64 = buffer.toString('base64');
+  return `data:${file.type};base64,${base64}`;
+}
 
 // This is a mock function. In a real app, this would involve a machine learning model.
 export async function classifyImageAction(formData: FormData) {
-  const image = formData.get("image");
+  const image = formData.get("image") as File;
 
   if (!image) {
     throw new Error("No image provided.");
   }
   
-  // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 2000));
-
-  // In a real app, you would process the image and run it through a model.
-  // Here, we just return a mock result.
-  return {
-    predictions: MOCK_BREEDS,
-  };
+  try {
+    const imageUri = await fileToDataURI(image);
+    const result = await classifyBreed({ photoDataUri: imageUri });
+    return {
+      predictions: result.predictions,
+    };
+  } catch(error) {
+    console.error("Error classifying image:", error);
+    throw new Error("Failed to classify image.");
+  }
 }
 
 const BreedDescriptionInput = z.object({
