@@ -28,6 +28,9 @@ export async function classifyImageAction(formData: FormData) {
     };
   } catch(error) {
     console.error("Error classifying image:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to classify image: ${error.message}`);
+    }
     throw new Error("Failed to classify image.");
   }
 }
